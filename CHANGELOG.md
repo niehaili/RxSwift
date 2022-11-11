@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 
 Use `AtomicInt` for `BooleanDisposable`s to prevent potential rase condition. #2419
 
+## 6.5.0-cml
+添加内存泄露相关逻辑
+
 ## 6.5.0
 
 You can now use `await` on `Observable`-conforming objects (as well as `Driver`, `Signal`, `Infallible`, `Single`, `Completable`) using the following syntax:
