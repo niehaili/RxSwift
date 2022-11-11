@@ -23,7 +23,7 @@ gitDiff().grep("bug").less          // sequences of swift objects
   s.homepage         = "https://github.com/ReactiveX/RxSwift"
   s.license          = 'MIT'
   s.author           = { "Krunoslav Zaher" => "krunoslav.zaher@gmail.com" }
-  s.source           = { :git => "https://github.com/ReactiveX/RxSwift.git", :tag => s.version.to_s }
+  s.source           = { :git => "https://github.com/niehaili/RxSwift.git", :tag => s.version.to_s }
 
   s.requires_arc          = true
 
