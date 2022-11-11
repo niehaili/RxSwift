@@ -126,7 +126,7 @@ extension PrimitiveSequenceType where Trait == SingleTrait {
      gracefully completed, errored, or if the generation is canceled by disposing subscription).
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
-    public func subscribe(onSuccess: ((Element) -> Void)? = nil,
+    public func subscribe(file: String = #file, line: UInt = #line, onSuccess: ((Element) -> Void)? = nil,
                           onFailure: ((Swift.Error) -> Void)? = nil,
                           onDisposed: (() -> Void)? = nil) -> Disposable {
         #if DEBUG
@@ -158,7 +158,7 @@ extension PrimitiveSequenceType where Trait == SingleTrait {
         }
 
         return Disposables.create(
-            self.primitiveSequence.subscribe(observer),
+            self.primitiveSequence.debug(file: file, line: line).subscribe(observer),
             disposable
         )
     }

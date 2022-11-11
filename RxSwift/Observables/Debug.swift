@@ -41,10 +41,11 @@ final private class DebugSink<Source: ObservableType, Observer: ObserverType>: S
     init(parent: Parent, observer: Observer, cancel: Cancelable) {
         self.parent = parent
         self.timestampFormatter.dateFormat = dateFormat
-
-        logEvent(self.parent.identifier, dateFormat: self.timestampFormatter, content: "subscribed")
-
         super.init(observer: observer, cancel: cancel)
+        
+        logEvent(self.parent.identifier, dateFormat: self.timestampFormatter, content: "subscribed")
+        MemoryLeakChecker.addObj(obj: self, identifier: self.parent.identifier)
+
     }
     
     func on(_ event: Event<Element>) {
@@ -66,6 +67,7 @@ final private class DebugSink<Source: ObservableType, Observer: ObserverType>: S
     override func dispose() {
         if !self.isDisposed {
             logEvent(self.parent.identifier, dateFormat: self.timestampFormatter, content: "isDisposed")
+            MemoryLeakChecker.removeObj(obj: self)
         }
         super.dispose()
     }
@@ -89,7 +91,7 @@ final private class Debug<Source: ObservableType>: Producer<Source.Element> {
             else {
                 trimmedFile = file
             }
-            self.identifier = "\(trimmedFile):\(line) (\(function))"
+            self.identifier = "\(trimmedFile):\(line)"
         }
         self.source = source
     }
@@ -98,5 +100,49 @@ final private class Debug<Source: ObservableType>: Producer<Source.Element> {
         let sink = DebugSink(parent: self, observer: observer, cancel: cancel)
         let subscription = self.source.subscribe(sink)
         return (sink: sink, subscription: subscription)
+    }
+}
+
+public class MemoryLeakChecker {
+    public static var ignoreFileNames = [String]()
+    private let lock = NSLock()
+    private let unReleasedObjMap = NSMapTable<AnyObject, NSString>(keyOptions: .weakMemory)
+    private static let instance = MemoryLeakChecker()
+
+    public static func addObj(obj: AnyObject, identifier: String) {
+        instance.lock.lock(); defer { instance.lock.unlock() }
+        instance.unReleasedObjMap.setObject(identifier as NSString, forKey: obj)
+    }
+    
+    public static func removeObj(obj: AnyObject) {
+        instance.lock.lock(); defer { instance.lock.unlock() }
+        instance.unReleasedObjMap.removeObject(forKey: obj)
+   }
+   
+   public static func clearObjMap() {
+       instance.lock.lock(); defer { instance.lock.unlock() }
+       instance.unReleasedObjMap.removeAllObjects()
+       print("🐬🐬🐬 清除未释放对象")
+   }
+    
+    public static func printUnReleasedObjs() {
+        print("===== 🐬🐬🐬 内存泄露输出开始=====")
+        
+        var values = [NSString]()
+        let enumerator = instance.unReleasedObjMap.objectEnumerator()
+        while let value = enumerator?.nextObject() as? NSString {
+            values.append(value)
+        }
+        
+        // 分组
+        Dictionary(grouping: values, by: { $0 })
+            .map { (key, value) in
+            return "\(key):\(value.count)"
+            }.sorted().filter { info in
+                !ignoreFileNames.contains { info.hasPrefix("\($0).swift") }
+            }.forEach { info in
+            print(info)
+        }
+        print("===== 🐬🐬🐬 内存泄露输出结束=====")
     }
 }

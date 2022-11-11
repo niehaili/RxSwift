@@ -16,8 +16,8 @@ extension ObservableType {
      - parameter observers: Observers to receives events.
      - returns: Disposable object that can be used to unsubscribe the observers.
      */
-    public func bind<Observer: ObserverType>(to observers: Observer...) -> Disposable where Observer.Element == Element {
-        self.subscribe { event in
+    public func bind<Observer: ObserverType>(file: String = #file, line: UInt = #line, to observers: Observer...) -> Disposable where Observer.Element == Element {
+        self.debug(file: file, line: line).subscribe { event in
             observers.forEach { $0.on(event) }
         }
     }
@@ -29,8 +29,8 @@ extension ObservableType {
      - parameter observers: Observers to receives events.
      - returns: Disposable object that can be used to unsubscribe the observers.
      */
-    public func bind<Observer: ObserverType>(to observers: Observer...) -> Disposable where Observer.Element == Element? {
-        self.map { $0 as Element? }
+    public func bind<Observer: ObserverType>(file: String = #file, line: UInt = #line, to observers: Observer...) -> Disposable where Observer.Element == Element? {
+        self.debug(file: file, line: line).map { $0 as Element? }
             .subscribe { event in
                 observers.forEach { $0.on(event) }
             }
@@ -58,7 +58,7 @@ extension ObservableType {
     - parameter curriedArgument: Final argument passed to `binder` to finish binding process.
     - returns: Object representing subscription.
     */
-    public func bind<R1, R2>(to binder: (Self) -> (R1) -> R2, curriedArgument: R1) -> R2 {
+    public func bind<R1, R2>(file: String = #file, line: UInt = #line, to binder: (Self) -> (R1) -> R2, curriedArgument: R1) -> R2 {
         binder(self)(curriedArgument)
     }
     
@@ -74,10 +74,11 @@ extension ObservableType {
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
     public func bind<Object: AnyObject>(
+        file: String = #file, line: UInt = #line,
         with object: Object,
         onNext: @escaping (Object, Element) -> Void
     ) -> Disposable {
-        self.subscribe(onNext: { [weak object] in
+        self.subscribe(file: file, line: line, onNext: { [weak object] in
             guard let object = object else { return }
             onNext(object, $0)
         },
@@ -94,8 +95,8 @@ extension ObservableType {
     - parameter onNext: Action to invoke for each element in the observable sequence.
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
-    public func bind(onNext: @escaping (Element) -> Void) -> Disposable {
-        self.subscribe(onNext: onNext,
+    public func bind(file: String = #file, line: UInt = #line, onNext: @escaping (Element) -> Void) -> Disposable {
+        self.subscribe(file: file, line: line, onNext: onNext,
                        onError: { error in
                         rxFatalErrorInDebug("Binding error: \(error)")
                        })

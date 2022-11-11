@@ -17,11 +17,11 @@ extension ObservableType {
      - parameter on: Action to invoke for each event in the observable sequence.
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
-    public func subscribe(_ on: @escaping (Event<Element>) -> Void) -> Disposable {
+    public func subscribe(file: String = #file, line: UInt = #line, _ on: @escaping (Event<Element>) -> Void) -> Disposable {
         let observer = AnonymousObserver { e in
             on(e)
         }
-        return self.asObservable().subscribe(observer)
+        return self.debug(file: file, line: line).asObservable().subscribe(observer)
     }
     
     /**
@@ -40,6 +40,7 @@ extension ObservableType {
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
     public func subscribe<Object: AnyObject>(
+        file: String = #file, line: UInt = #line,
         with object: Object,
         onNext: ((Object, Element) -> Void)? = nil,
         onError: ((Object, Swift.Error) -> Void)? = nil,
@@ -47,6 +48,7 @@ extension ObservableType {
         onDisposed: ((Object) -> Void)? = nil
     ) -> Disposable {
         subscribe(
+            file: file, line: line,
             onNext: { [weak object] in
                 guard let object = object else { return }
                 onNext?(object, $0)
@@ -77,6 +79,7 @@ extension ObservableType {
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
     public func subscribe(
+        file: String = #file, line: UInt = #line,
         onNext: ((Element) -> Void)? = nil,
         onError: ((Swift.Error) -> Void)? = nil,
         onCompleted: (() -> Void)? = nil,
@@ -121,7 +124,7 @@ extension ObservableType {
                 }
             }
             return Disposables.create(
-                self.asObservable().subscribe(observer),
+                self.debug(file: file, line: line).asObservable().subscribe(observer),
                 disposable
             )
     }

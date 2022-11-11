@@ -131,12 +131,14 @@ extension SharedSequenceConvertibleType where SharingStrategy == SignalSharingSt
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
     public func emit<Object: AnyObject>(
+        file: String = #file, line: UInt = #line,
         with object: Object,
         onNext: ((Object, Element) -> Void)? = nil,
         onCompleted: ((Object) -> Void)? = nil,
         onDisposed: ((Object) -> Void)? = nil
     ) -> Disposable {
         self.asObservable().subscribe(
+            file:file, line: line,
             with: object,
             onNext: onNext,
             onCompleted: onCompleted,
@@ -157,11 +159,12 @@ extension SharedSequenceConvertibleType where SharingStrategy == SignalSharingSt
      - returns: Subscription object used to unsubscribe from the observable sequence.
      */
     public func emit(
+        file: String = #file, line: UInt = #line,
         onNext: ((Element) -> Void)? = nil,
         onCompleted: (() -> Void)? = nil,
         onDisposed: (() -> Void)? = nil
     ) -> Disposable {
-        self.asObservable().subscribe(onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
+        self.asObservable().subscribe(file:file, line: line, onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
     }
 
     /**
@@ -172,7 +175,7 @@ extension SharedSequenceConvertibleType where SharingStrategy == SignalSharingSt
 
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
-    public func emit() -> Disposable {
-        emit(onNext: nil, onCompleted: nil, onDisposed: nil)
+    public func emit(file: String = #file, line: UInt = #line) -> Disposable {
+        emit(file: file, line: line, onNext: nil, onCompleted: nil, onDisposed: nil)
     }
 }

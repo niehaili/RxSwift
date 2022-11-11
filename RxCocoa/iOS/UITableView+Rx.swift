@@ -74,7 +74,7 @@ extension Reactive where Base: UITableView {
              .disposed(by: disposeBag)
     */
     public func items<Sequence: Swift.Sequence, Cell: UITableViewCell, Source: ObservableType>
-        (cellIdentifier: String, cellType: Cell.Type = Cell.self)
+        (file: String = #file, line: UInt = #line, cellIdentifier: String, cellType: Cell.Type = Cell.self)
         -> (_ source: Source)
         -> (_ configureCell: @escaping (Int, Sequence.Element, Cell) -> Void)
         -> Disposable
@@ -87,7 +87,7 @@ extension Reactive where Base: UITableView {
                     configureCell(i, item, cell)
                     return cell
                 }
-                return self.items(dataSource: dataSource)(source)
+                return self.items(file: file, line: line, dataSource: dataSource)(source)
             }
         }
     }
@@ -107,7 +107,7 @@ extension Reactive where Base: UITableView {
     public func items<
             DataSource: RxTableViewDataSourceType & UITableViewDataSource,
             Source: ObservableType>
-        (dataSource: DataSource)
+        (file: String = #file, line: UInt = #line, dataSource: DataSource)
         -> (_ source: Source)
         -> Disposable
         where DataSource.Element == Source.Element {
@@ -120,7 +120,7 @@ extension Reactive where Base: UITableView {
             // Therefore it's better to set delegate proxy first, just to be sure.
             _ = self.delegate
             // Strong reference is needed because data source is in use until result subscription is disposed
-            return source.subscribeProxyDataSource(ofObject: self.base, dataSource: dataSource as UITableViewDataSource, retainDataSource: true) { [weak tableView = self.base] (_: RxTableViewDataSourceProxy, event) -> Void in
+            return source.debug(file: file, line: line).subscribeProxyDataSource(ofObject: self.base, dataSource: dataSource as UITableViewDataSource, retainDataSource: true) { [weak tableView = self.base] (_: RxTableViewDataSourceProxy, event) -> Void in
                 guard let tableView = tableView else {
                     return
                 }

@@ -74,7 +74,7 @@ extension Reactive where Base: UICollectionView {
              .disposed(by: disposeBag)
     */
     public func items<Sequence: Swift.Sequence, Cell: UICollectionViewCell, Source: ObservableType>
-        (cellIdentifier: String, cellType: Cell.Type = Cell.self)
+        (file: String = #file, line: UInt = #line, cellIdentifier: String, cellType: Cell.Type = Cell.self)
         -> (_ source: Source)
         -> (_ configureCell: @escaping (Int, Sequence.Element, Cell) -> Void)
         -> Disposable where Source.Element == Sequence {
@@ -87,7 +87,7 @@ extension Reactive where Base: UICollectionView {
                     return cell
                 }
                     
-                return self.items(dataSource: dataSource)(source)
+                return self.items(file: file, line: line, dataSource: dataSource)(source)
             }
         }
     }
@@ -135,7 +135,7 @@ extension Reactive where Base: UICollectionView {
     public func items<
             DataSource: RxCollectionViewDataSourceType & UICollectionViewDataSource,
             Source: ObservableType>
-        (dataSource: DataSource)
+        (file: String = #file, line: UInt = #line, dataSource: DataSource)
         -> (_ source: Source)
         -> Disposable where DataSource.Element == Source.Element
           {
@@ -148,7 +148,7 @@ extension Reactive where Base: UICollectionView {
             // Therefore it's better to set delegate proxy first, just to be sure.
             _ = self.delegate
             // Strong reference is needed because data source is in use until result subscription is disposed
-            return source.subscribeProxyDataSource(ofObject: self.base, dataSource: dataSource, retainDataSource: true) { [weak collectionView = self.base] (_: RxCollectionViewDataSourceProxy, event) -> Void in
+            return source.debug(file: file, line: line).subscribeProxyDataSource(ofObject: self.base, dataSource: dataSource, retainDataSource: true) { [weak collectionView = self.base] (_: RxCollectionViewDataSourceProxy, event) -> Void in
                 guard let collectionView = collectionView else {
                     return
                 }

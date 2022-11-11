@@ -22,9 +22,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - parameter observers: Observers that receives events.
     - returns: Disposable object that can be used to unsubscribe the observer from the subject.
     */
-    public func drive<Observer: ObserverType>(_ observers: Observer...) -> Disposable where Observer.Element == Element {
+    public func drive<Observer: ObserverType>(file: String = #file, line: UInt = #line, _ observers: Observer...) -> Disposable where Observer.Element == Element {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.asSharedSequence()
+        return self.debug(file: file, line: line).asSharedSequence()
                    .asObservable()
                    .subscribe { e in
                     observers.forEach { $0.on(e) }
@@ -40,12 +40,12 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
      - parameter observers: Observers that receives events.
      - returns: Disposable object that can be used to unsubscribe the observer from the subject.
      */
-    public func drive<Observer: ObserverType>(_ observers: Observer...) -> Disposable where Observer.Element == Element? {
+    public func drive<Observer: ObserverType>(file: String = #file, line: UInt = #line, _ observers: Observer...) -> Disposable where Observer.Element == Element? {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
         return self.asSharedSequence()
                    .asObservable()
                    .map { $0 as Element? }
-                   .subscribe { e in
+                   .subscribe(file: file, line: line) { e in
                     observers.forEach { $0.on(e) }
                    }
     }
@@ -57,9 +57,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - parameter relays: Target relays for sequence elements.
     - returns: Disposable object that can be used to unsubscribe the observer from the relay.
     */
-    public func drive(_ relays: BehaviorRelay<Element>...) -> Disposable {
+    public func drive(file: String = #file, line: UInt = #line, _ relays: BehaviorRelay<Element>...) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.drive(onNext: { e in
+        return self.drive(file: file, line: line, onNext: { e in
             relays.forEach { $0.accept(e) }
         })
     }
@@ -71,9 +71,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
      - parameter relays: Target relays for sequence elements.
      - returns: Disposable object that can be used to unsubscribe the observer from the relay.
      */
-    public func drive(_ relays: BehaviorRelay<Element?>...) -> Disposable {
+    public func drive(file: String = #file, line: UInt = #line, _ relays: BehaviorRelay<Element?>...) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.drive(onNext: { e in
+        return self.drive(file: file, line: line, onNext: { e in
             relays.forEach { $0.accept(e) }
         })
     }
@@ -85,9 +85,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - parameter relays: Target relays for sequence elements.
     - returns: Disposable object that can be used to unsubscribe the observer from the relay.
     */
-    public func drive(_ relays: ReplayRelay<Element>...) -> Disposable {
+    public func drive(file: String = #file, line: UInt = #line, _ relays: ReplayRelay<Element>...) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.drive(onNext: { e in
+        return self.drive(file: file, line: line, onNext: { e in
             relays.forEach { $0.accept(e) }
         })
     }
@@ -99,9 +99,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
      - parameter relays: Target relays for sequence elements.
      - returns: Disposable object that can be used to unsubscribe the observer from the relay.
      */
-    public func drive(_ relays: ReplayRelay<Element?>...) -> Disposable {
+    public func drive(file: String = #file, line: UInt = #line, _ relays: ReplayRelay<Element?>...) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.drive(onNext: { e in
+        return self.drive(file: file, line: line, onNext: { e in
             relays.forEach { $0.accept(e) }
         })
     }
@@ -113,9 +113,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - parameter transformation: Function used to bind elements from `self`.
     - returns: Object representing subscription.
     */
-    public func drive<Result>(_ transformation: (Observable<Element>) -> Result) -> Result {
+    public func drive<Result>(file: String = #file, line: UInt = #line, _ transformation: (Observable<Element>) -> Result) -> Result {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return transformation(self.asObservable())
+        return transformation(self.debug(file: file, line: line).asObservable())
     }
 
     /**
@@ -132,9 +132,9 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - parameter curriedArgument: Final argument passed to `binder` to finish binding process.
     - returns: Object representing subscription.
     */
-    public func drive<R1, R2>(_ with: (Observable<Element>) -> (R1) -> R2, curriedArgument: R1) -> R2 {
+    public func drive<R1, R2>(file: String = #file, line: UInt = #line, _ with: (Observable<Element>) -> (R1) -> R2, curriedArgument: R1) -> R2 {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return with(self.asObservable())(curriedArgument)
+        return with(self.debug(file: file, line: line).asObservable())(curriedArgument)
     }
     
     /**
@@ -156,13 +156,14 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
     public func drive<Object: AnyObject>(
+        file: String = #file, line: UInt = #line,
         with object: Object,
         onNext: ((Object, Element) -> Void)? = nil,
         onCompleted: ((Object) -> Void)? = nil,
         onDisposed: ((Object) -> Void)? = nil
     ) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.asObservable().subscribe(with: object, onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
+        return self.asObservable().subscribe(file: file, line: line, with: object, onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
     }
     
     /**
@@ -179,12 +180,13 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
     public func drive(
+        file: String = #file, line: UInt = #line,
         onNext: ((Element) -> Void)? = nil,
         onCompleted: (() -> Void)? = nil,
         onDisposed: (() -> Void)? = nil
     ) -> Disposable {
         MainScheduler.ensureRunningOnMainThread(errorMessage: errorMessage)
-        return self.asObservable().subscribe(onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
+        return self.asObservable().subscribe(file: file, line: line, onNext: onNext, onCompleted: onCompleted, onDisposed: onDisposed)
     }
 
     /**
@@ -195,8 +197,8 @@ extension SharedSequenceConvertibleType where SharingStrategy == DriverSharingSt
 
     - returns: Subscription object used to unsubscribe from the observable sequence.
     */
-    public func drive() -> Disposable {
-        drive(onNext: nil, onCompleted: nil, onDisposed: nil)
+    public func drive(file: String = #file, line: UInt = #line) -> Disposable {
+        drive(file: file, line: line, onNext: nil, onCompleted: nil, onDisposed: nil)
     }
 }
 
